@@ -1,216 +1,153 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 
 function App() {
 
-  const [status, setStatus] = useState("尚未開始")
+const [status, setStatus] = useState("尚未開始")
+const [transcript, setTranscript] = useState("")
+const [aiReply, setAiReply] = useState("")
 
-  const [transcript, setTranscript] = useState("")
+const recognitionRef = useRef(null)
+const lastReplyRef = useRef("")
 
-  const [aiReply, setAiReply] = useState("")
+function handleAIResponse(text) {
 
-  // 儲存 SpeechRecognition 物件
+let reply = ""
 
-  const recognitionRef = useRef(null)
-  const shouldKeepListening = useRef(true)
+if (text.includes("你好")) {
+  reply = "你好，我是 AI 助教！"
+}
 
-  // 避免 AI 重複回應
+else if (
+  text.includes("不會") ||
+  text.includes("看不懂")
+) {
+  reply = "需要我幫你解釋嗎？"
+}
 
-  const lastReplyRef = useRef("")
+else if (
+  text.includes("for loop")
+) {
+  reply = "for loop 是用來重複執行程式的迴圈。"
+}
 
+if (
+  reply &&
+  reply !== lastReplyRef.current
+) {
+  setAiReply(reply)
+  lastReplyRef.current = reply
+}
 
+}
 
-  // AI 回應邏輯
+function startSpeechRecognition() {
 
-  function handleAIResponse(text) {
+if (recognitionRef.current) {
+  return
+}
 
-    let reply = ""
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition
 
-    if (text.includes("你好")) {
+if (!SpeechRecognition) {
 
-      reply = "你好，我是 AI 助教！"
-    }
+  setStatus("瀏覽器不支援語音辨識")
+  return
 
-    else if (
-      text.includes("不會") ||
-      text.includes("看不懂")
-    ) {
+}
 
-      reply = "需要我幫你解釋嗎？"
-    }
+const recognition = new SpeechRecognition()
 
-    else if (
-      text.includes("for loop")
-    ) {
+recognition.lang = "zh-TW"
+recognition.continuous = true
+recognition.interimResults = true
 
-      reply = "for loop 是用來重複執行程式的迴圈。"
-    }
+recognitionRef.current = recognition
 
-    // 避免重複回應
+recognition.onstart = () => {
 
-    if (
-      reply !== "" &&
-      reply !== lastReplyRef.current
-    ) {
+  setStatus("正在聆聽...")
 
-      setAiReply(reply)
+}
 
-      lastReplyRef.current = reply
-    }
+recognition.onresult = (event) => {
 
-  }
+  const text =
+    event.results[
+      event.results.length - 1
+    ][0].transcript
 
+  setTranscript(text)
 
+  handleAIResponse(text)
 
-  // 開始語音辨識
+}
 
-  function startSpeechRecognition() {
+recognition.onerror = (event) => {
 
-    const SpeechRecognition =
-      window.SpeechRecognition ||
-      window.webkitSpeechRecognition
+  console.log(event)
 
-    if (!SpeechRecognition) {
+  setStatus("語音辨識錯誤")
 
-      setStatus("你的瀏覽器不支援語音辨識")
+  recognitionRef.current = null
 
-      return
-    }
+}
 
-    const recognition = new SpeechRecognition()
+recognition.onend = () => {
 
-    recognitionRef.current = recognition
+  setStatus("語音辨識已停止")
 
-    recognition.lang = 'zh-TW'
+  recognitionRef.current = null
 
-    recognition.continuous = true
+}
 
-    recognition.interimResults = true
+recognition.start()
 
+}
 
+function stopSpeechRecognition() {
 
-    recognition.onstart = () => {
+if (recognitionRef.current) {
 
-      setStatus("正在聆聽...")
-    }
+  recognitionRef.current.stop()
 
+}
 
+}
 
-    recognition.onresult = (event) => {
+return (
 
-      const latestResult =
-        event.results[event.results.length - 1][0].transcript
+<div style={{ padding: "20px" }}>
 
-      console.log(latestResult)
+  <h1>AI Assistant Panel</h1>
 
-      setTranscript(latestResult)
+  <button
+    onClick={startSpeechRecognition}
+  >
+    開始和 AI 對話
+  </button>
 
-      handleAIResponse(latestResult)
-    }
+  <button
+    onClick={stopSpeechRecognition}
+    style={{
+      marginLeft: "10px"
+    }}
+  >
+    停止
+  </button>
 
+  <p>{status}</p>
 
+  <h2>你說的話：</h2>
+  <p>{transcript}</p>
 
-    recognition.onerror = (event) => {
+  <h2>AI 回應：</h2>
+  <p>{aiReply}</p>
 
-      console.error(event)
+</div>
 
-      setStatus("語音辨識錯誤")
-    }
-
-
-
-    recognition.onend = () => {
-
-  if (shouldKeepListening.current) {
-
-    setStatus("重新啟動語音辨識...")
-
-    setTimeout(() => {
-
-      recognition.start()
-
-    }, 500)
-
-  } else {
-
-    setStatus("語音辨識已停止")
-
-  }
-
-  }
-
-
-
-    recognition.start()
-  }
-
-
-
-  // 停止語音辨識
-
-  function stopSpeechRecognition() {
-
-  shouldKeepListening.current = false
-
-  if (recognitionRef.current) {
-
-    recognitionRef.current.stop()
-
-  }
-
-  }
-
-  useEffect(() => {
-
-  const timer = setTimeout(() => {
-
-    startSpeechRecognition()
-
-  }, 1000)
-
-  return () => clearTimeout(timer)
-
-}, [])
-
-  return (
-
-    <div style={{ padding: "20px" }}>
-
-      <h1>AI Assistant Panel</h1>
-
-
-
-      <button onClick={startSpeechRecognition}>
-        開始語音辨識
-      </button>
-
-
-
-      <button
-        onClick={stopSpeechRecognition}
-        style={{ marginLeft: "10px" }}
-      >
-        停止語音辨識
-      </button>
-
-
-
-      <p>{status}</p>
-
-
-
-      <h2>你說的話：</h2>
-
-      <p>{transcript}</p>
-
-
-
-      <h2>AI 回應：</h2>
-
-      <p>{aiReply}</p>
-
-    </div>
-
-  )
+)
 }
 
 export default App
