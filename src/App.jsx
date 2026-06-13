@@ -2,13 +2,15 @@ import { useState, useRef } from 'react'
 
 function App() {
 
+  console.log(
+  "iframe?",
+  window.self !== window.top
+)
 const [status, setStatus] = useState("尚未開始")
 const [transcript, setTranscript] = useState("")
 const [aiReply, setAiReply] = useState("")
 
-const mediaRecorderRef = useRef(null)
-const audioChunksRef = useRef([])
-
+const recognitionRef = useRef(null)
 const lastReplyRef = useRef("")
 
 function handleAIResponse(text) {
@@ -45,88 +47,113 @@ if (
 
 }
 
-async function startRecording() {
+function startSpeechRecognition() {
 
-try {
+if (recognitionRef.current) return
 
-  const stream =
-    await navigator.mediaDevices.getUserMedia({
-      audio: true
-    })
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition
 
-  const mediaRecorder =
-    new MediaRecorder(stream)
+if (!SpeechRecognition) {
 
-  mediaRecorderRef.current =
-    mediaRecorder
+  setStatus("你的瀏覽器不支援語音辨識")
 
-  audioChunksRef.current = []
-
-  mediaRecorder.ondataavailable =
-    (event) => {
-
-      audioChunksRef.current.push(
-        event.data
-      )
-
-    }
-
-  mediaRecorder.start()
-
-  setStatus("錄音中...")
-
-  console.log("開始錄音")
+  return
 
 }
 
-catch (err) {
+const recognition =
+  new SpeechRecognition()
 
-  console.error(err)
+recognitionRef.current =
+  recognition
 
-  setStatus("無法取得麥克風")
+recognition.lang =
+  "zh-TW"
 
-}
+recognition.continuous =
+  true
 
-}
+recognition.interimResults =
+  true
 
-function stopRecording() {
+recognition.onstart =
+  () => {
 
-const recorder =
-  mediaRecorderRef.current
-
-if (!recorder) return
-
-recorder.onstop = () => {
-
-  const audioBlob =
-    new Blob(
-      audioChunksRef.current,
-      {
-        type: "audio/webm"
-      }
+    setStatus(
+      "正在聆聽..."
     )
 
-  console.log(
-    "錄音完成",
-    audioBlob
-  )
+  }
 
-  console.log(
-    "size:",
-    audioBlob.size
-  )
+recognition.onresult =
+  (event) => {
 
-  setStatus(
-    "錄音完成"
-  )
+    const latestResult =
+      event.results[
+        event.results.length - 1
+      ][0].transcript
 
-  setTranscript(
-    `錄音大小: ${audioBlob.size} bytes`
-  )
+    console.log(
+      latestResult
+    )
+
+    setTranscript(
+      latestResult
+    )
+
+    handleAIResponse(
+      latestResult
+    )
+
+  }
+
+recognition.onerror =
+  (event) => {
+
+    console.error(
+      event
+    )
+
+    setStatus(
+      "語音辨識錯誤"
+    )
+
+  }
+
+recognition.onend =
+  () => {
+
+    recognitionRef.current =
+      null
+
+    setStatus(
+      "語音辨識已停止"
+    )
+
+  }
+
+recognition.start()
 
 }
 
-recorder.stop()
+function stopSpeechRecognition() {
+
+if (
+  recognitionRef.current
+) {
+
+  recognitionRef.current.stop()
+
+  recognitionRef.current =
+    null
+
+  setStatus(
+    "已手動停止"
+  )
+
+}
 
 }
 
@@ -144,21 +171,21 @@ return (
 
   <button
     onClick={
-      startRecording
+      startSpeechRecognition
     }
   >
-    開始錄音
+    開始語音辨識
   </button>
 
   <button
     onClick={
-      stopRecording
+      stopSpeechRecognition
     }
     style={{
       marginLeft: "10px"
     }}
   >
-    停止錄音
+    停止語音辨識
   </button>
 
   <p>
@@ -166,7 +193,7 @@ return (
   </p>
 
   <h2>
-    測試結果：
+    你說的話：
   </h2>
 
   <p>
