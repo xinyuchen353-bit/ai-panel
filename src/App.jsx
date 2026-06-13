@@ -11,6 +11,7 @@ function App() {
   // 儲存 SpeechRecognition 物件
 
   const recognitionRef = useRef(null)
+  const shouldKeepListening = useRef(true)
 
   // 避免 AI 重複回應
 
@@ -119,8 +120,23 @@ function App() {
 
     recognition.onend = () => {
 
-      setStatus("語音辨識已停止")
-    }
+  if (shouldKeepListening.current) {
+
+    setStatus("重新啟動語音辨識...")
+
+    setTimeout(() => {
+
+      recognition.start()
+
+    }, 500)
+
+  } else {
+
+    setStatus("語音辨識已停止")
+
+  }
+
+  }
 
 
 
@@ -133,12 +149,13 @@ function App() {
 
   function stopSpeechRecognition() {
 
-    if (recognitionRef.current) {
+  shouldKeepListening.current = false
 
-      recognitionRef.current.stop()
+  if (recognitionRef.current) {
 
-      setStatus("已手動停止")
-    }
+    recognitionRef.current.stop()
+
+  }
 
   }
 
