@@ -115,18 +115,20 @@ recognition.onresult =
 
   }
 
-recognition.onerror =
-  (event) => {
+recognition.onerror = (event) => {
 
-    console.error(
-      event
-    )
+  console.error("Speech Error:", event)
 
-    setStatus(
-      "語音辨識錯誤"
-    )
+  console.error("error=", event.error)
 
-  }
+  console.error("message=", event.message)
+
+  setStatus(
+    "語音辨識錯誤：" +
+    event.error
+  )
+
+}
 
 recognition.onend =
   () => {
