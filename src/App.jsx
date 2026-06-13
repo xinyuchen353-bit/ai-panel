@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 function App() {
 
@@ -142,7 +142,17 @@ function App() {
 
   }
 
+  useEffect(() => {
 
+  const timer = setTimeout(() => {
+
+    startSpeechRecognition()
+
+  }, 1000)
+
+  return () => clearTimeout(timer)
+
+}, [])
 
   return (
 
