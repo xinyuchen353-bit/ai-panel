@@ -2,6 +2,10 @@ import { useState, useRef } from 'react'
 
 function App() {
 
+  console.log(
+  "iframe?",
+  window.self !== window.top
+)
 const [status, setStatus] = useState("尚未開始")
 const [transcript, setTranscript] = useState("")
 const [aiReply, setAiReply] = useState("")
@@ -45,16 +49,6 @@ if (
 
 function startSpeechRecognition() {
 
-console.log(
-  "SpeechRecognition:",
-  window.SpeechRecognition
-)
-
-console.log(
-  "webkitSpeechRecognition:",
-  window.webkitSpeechRecognition
-)
-
 if (recognitionRef.current) return
 
 const SpeechRecognition =
@@ -84,11 +78,14 @@ recognition.continuous =
 recognition.interimResults =
   true
 
-recognition.onstart = () => {
-  console.log("onstart")
-  setStatus("正在聆聽...")
-}
+recognition.onstart =
+  () => {
 
+    setStatus(
+      "正在聆聽..."
+    )
+
+  }
 
 recognition.onresult =
   (event) => {
@@ -112,23 +109,33 @@ recognition.onresult =
 
   }
 
-recognition.onerror = (event) => {
-  console.log("onerror")
-  console.log(event.error)
-  setStatus("錯誤：" + event.error)
-}
+recognition.onerror =
+  (event) => {
 
-recognition.onend = () => {
-  console.log("onend")
-  recognitionRef.current = null
-  setStatus("語音辨識已停止")
-}
+    console.error(
+      event
+    )
 
-try {
-  recognition.start()
-  console.log("start() 成功呼叫")
-} catch(err) {
-  console.error("start() 失敗", err)
+    setStatus(
+      "語音辨識錯誤"
+    )
+
+  }
+
+recognition.onend =
+  () => {
+
+    recognitionRef.current =
+      null
+
+    setStatus(
+      "語音辨識已停止"
+    )
+
+  }
+
+recognition.start()
+
 }
 
 function stopSpeechRecognition() {
