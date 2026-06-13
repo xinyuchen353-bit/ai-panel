@@ -45,6 +45,16 @@ if (
 
 function startSpeechRecognition() {
 
+console.log(
+  "SpeechRecognition:",
+  window.SpeechRecognition
+)
+
+console.log(
+  "webkitSpeechRecognition:",
+  window.webkitSpeechRecognition
+)
+
 if (recognitionRef.current) return
 
 const SpeechRecognition =
