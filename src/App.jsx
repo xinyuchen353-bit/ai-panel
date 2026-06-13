@@ -31,20 +31,21 @@ else if (
 }
 
 if (
-  reply &&
+  reply !== "" &&
   reply !== lastReplyRef.current
 ) {
+
   setAiReply(reply)
+
   lastReplyRef.current = reply
+
 }
 
 }
 
 function startSpeechRecognition() {
 
-if (recognitionRef.current) {
-  return
-}
+if (recognitionRef.current) return
 
 const SpeechRecognition =
   window.SpeechRecognition ||
@@ -52,55 +53,82 @@ const SpeechRecognition =
 
 if (!SpeechRecognition) {
 
-  setStatus("瀏覽器不支援語音辨識")
+  setStatus("你的瀏覽器不支援語音辨識")
+
   return
 
 }
 
-const recognition = new SpeechRecognition()
+const recognition =
+  new SpeechRecognition()
 
-recognition.lang = "zh-TW"
-recognition.continuous = true
-recognition.interimResults = true
+recognitionRef.current =
+  recognition
 
-recognitionRef.current = recognition
+recognition.lang =
+  "zh-TW"
 
-recognition.onstart = () => {
+recognition.continuous =
+  true
 
-  setStatus("正在聆聽...")
+recognition.interimResults =
+  true
 
-}
+recognition.onstart =
+  () => {
 
-recognition.onresult = (event) => {
+    setStatus(
+      "正在聆聽..."
+    )
 
-  const text =
-    event.results[
-      event.results.length - 1
-    ][0].transcript
+  }
 
-  setTranscript(text)
+recognition.onresult =
+  (event) => {
 
-  handleAIResponse(text)
+    const latestResult =
+      event.results[
+        event.results.length - 1
+      ][0].transcript
 
-}
+    console.log(
+      latestResult
+    )
 
-recognition.onerror = (event) => {
+    setTranscript(
+      latestResult
+    )
 
-  console.log(event)
+    handleAIResponse(
+      latestResult
+    )
 
-  setStatus("語音辨識錯誤")
+  }
 
-  recognitionRef.current = null
+recognition.onerror =
+  (event) => {
 
-}
+    console.error(
+      event
+    )
 
-recognition.onend = () => {
+    setStatus(
+      "語音辨識錯誤"
+    )
 
-  setStatus("語音辨識已停止")
+  }
 
-  recognitionRef.current = null
+recognition.onend =
+  () => {
 
-}
+    recognitionRef.current =
+      null
+
+    setStatus(
+      "語音辨識已停止"
+    )
+
+  }
 
 recognition.start()
 
@@ -108,9 +136,18 @@ recognition.start()
 
 function stopSpeechRecognition() {
 
-if (recognitionRef.current) {
+if (
+  recognitionRef.current
+) {
 
   recognitionRef.current.stop()
+
+  recognitionRef.current =
+    null
+
+  setStatus(
+    "已手動停止"
+  )
 
 }
 
@@ -118,36 +155,59 @@ if (recognitionRef.current) {
 
 return (
 
-<div style={{ padding: "20px" }}>
+<div
+  style={{
+    padding: "20px"
+  }}
+>
 
-  <h1>AI Assistant Panel</h1>
+  <h1>
+    AI Assistant Panel
+  </h1>
 
   <button
-    onClick={startSpeechRecognition}
+    onClick={
+      startSpeechRecognition
+    }
   >
-    開始和 AI 對話
+    開始語音辨識
   </button>
 
   <button
-    onClick={stopSpeechRecognition}
+    onClick={
+      stopSpeechRecognition
+    }
     style={{
       marginLeft: "10px"
     }}
   >
-    停止
+    停止語音辨識
   </button>
 
-  <p>{status}</p>
+  <p>
+    {status}
+  </p>
 
-  <h2>你說的話：</h2>
-  <p>{transcript}</p>
+  <h2>
+    你說的話：
+  </h2>
 
-  <h2>AI 回應：</h2>
-  <p>{aiReply}</p>
+  <p>
+    {transcript}
+  </p>
+
+  <h2>
+    AI 回應：
+  </h2>
+
+  <p>
+    {aiReply}
+  </p>
 
 </div>
 
 )
+
 }
 
 export default App
