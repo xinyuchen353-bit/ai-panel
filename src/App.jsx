@@ -84,14 +84,11 @@ recognition.continuous =
 recognition.interimResults =
   true
 
-recognition.onstart =
-  () => {
+recognition.onstart = () => {
+  console.log("onstart")
+  setStatus("正在聆聽...")
+}
 
-    setStatus(
-      "正在聆聽..."
-    )
-
-  }
 
 recognition.onresult =
   (event) => {
@@ -116,31 +113,16 @@ recognition.onresult =
   }
 
 recognition.onerror = (event) => {
-
-  console.error("Speech Error:", event)
-
-  console.error("error=", event.error)
-
-  console.error("message=", event.message)
-
-  setStatus(
-    "語音辨識錯誤：" +
-    event.error
-  )
-
+  console.log("onerror")
+  console.log(event.error)
+  setStatus("錯誤：" + event.error)
 }
 
-recognition.onend =
-  () => {
-
-    recognitionRef.current =
-      null
-
-    setStatus(
-      "語音辨識已停止"
-    )
-
-  }
+recognition.onend = () => {
+  console.log("onend")
+  recognitionRef.current = null
+  setStatus("語音辨識已停止")
+}
 
 try {
   recognition.start()
