@@ -142,8 +142,11 @@ recognition.onend =
 
   }
 
-recognition.start()
-
+try {
+  recognition.start()
+  console.log("start() 成功呼叫")
+} catch(err) {
+  console.error("start() 失敗", err)
 }
 
 function stopSpeechRecognition() {
